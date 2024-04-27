@@ -15,7 +15,6 @@ const updateBlog = async (req, res) => {
   try {
     const id = req.params.id;
     const result = await Blog.findByIdAndUpdate(id, req.body, { new: true });
-    
     if (!result) {
       return res.status(404).json({ message: "Blog Not Found" });
     }
@@ -27,13 +26,45 @@ const updateBlog = async (req, res) => {
 };
 const getAllBlogs = async (req, res) => {
   try {
-    const blogs = await Blog.find().sort({createdAt:-1});
-    res.status(200).json(blogs);
+    const keyword = req.params.keyword;
+    if (!keyword) {
+      const blogs = await Blog.find().sort({ createdAt: -1 });
+      return res.status(200).json(blogs);
+    }
+    const blogs = await Blog.find({
+      $or: [
+        { title: { $regex: keyword, $options: "i" } },
+        { author: { $regex: keyword, $options: "i" } },
+      ],
+    }).sort({ createdAt: -1 });
+    if (blogs.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No blogs found matching the search criteria" });
+    } else {
+      return res.status(200).json(blogs);
+    }
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+const getUsersBlog = async (req,res)=>{
+  try{
+    const author = req.params.author;
+    const blogs = await Blog.find({ author: { $regex: author, $options: "i" }}).sort({createdAt:-1});
+    if (blogs.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No blogs found matching the search criteria" });
+      } else {
+        return res.status(200).json(blogs);
+      }
+  }catch(err){
+    console.log(err);
+    res.status(500).json({message:"Internal Server Error"});
+  }
+}
 const getBlogByID = async (req, res) => {
   try {
     const id = req.params.id;
@@ -51,11 +82,18 @@ const deleteBlog = async (req, res) => {
     if (!result) {
       return res.status(404).json({ message: "Blog Not Found" });
     }
-    res.status(200).json({message:"Blog Deleted"});
+    res.status(200).json({ message: "Blog Deleted" });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-module.exports = { createBlog, updateBlog, getAllBlogs, getBlogByID,deleteBlog };
+module.exports = {
+  createBlog,
+  updateBlog,
+  getAllBlogs,
+  getUsersBlog,
+  getBlogByID,
+  deleteBlog,
+};

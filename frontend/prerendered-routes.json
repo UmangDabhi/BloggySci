@@ -1,5 +1,9 @@
 {
   "routes": [
-    "/"
+    "/About",
+    "/Create-Blog",
+    "/home",
+    "/login",
+    "/My-Blogs"
   ]
 }
